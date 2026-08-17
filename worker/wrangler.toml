@@ -27,7 +27,7 @@ APP_URL = "https://nomoredesign.github.io/brand-tone-spectrum/"
 binding = "SUBMISSIONS"
 # Filled in by `npm run worker:setup`, or by hand from the id that
 # `wrangler kv namespace create SUBMISSIONS` prints.
-id = "replace-with-your-kv-namespace-id"
+id = "20e522aeb1ac49ed97603dfbad37f3e4"
 
 [observability]
 enabled = true
