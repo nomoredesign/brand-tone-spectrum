@@ -1,20 +1,25 @@
+import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { getClientConfig } from '@/lib/clients';
+import { getClientConfig, getCommittedAnswers } from '@/lib/clients';
+import { defaultAnswers } from '@/features/session/answers';
+import { useSession } from '@/features/session/store';
+import { SpectrumSheet } from '@/features/spectrum/SpectrumSheet';
 import { NotFoundPage } from './NotFoundPage';
 
 export function ClientPage() {
   const { slug } = useParams<{ slug: string }>();
   const config = getClientConfig(slug);
+  const initialise = useSession((state) => state.initialise);
+
+  useEffect(() => {
+    if (!config) return;
+    // An agreed answers file committed next to the config becomes the starting
+    // point, and the thing reset returns to. Otherwise the config's own values do.
+    const startingPoint = getCommittedAnswers(config.slug) ?? defaultAnswers(config);
+    initialise(config, startingPoint);
+  }, [config, initialise]);
 
   if (!config) return <NotFoundPage title="No such client" />;
 
-  return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
-      <p className="label-caps text-muted">{config.projectLine}</p>
-      <h1 className="font-display mt-2 text-3xl tracking-tight">{config.clientName}</h1>
-      <p className="text-muted mt-4">
-        {config.axes.length} pairs, scored from {config.scale.min} to {config.scale.max}.
-      </p>
-    </main>
-  );
+  return <SpectrumSheet config={config} readOnly={false} />;
 }
