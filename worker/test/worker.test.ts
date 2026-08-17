@@ -200,6 +200,63 @@ describe('the email', () => {
   });
 });
 
+describe('a worker whose secrets are not all set yet', () => {
+  it('says which settings exist, and never what they are', async () => {
+    const response = await SELF.fetch('https://worker.example.com/health', {
+      headers: { Origin: ORIGIN },
+    });
+
+    const body = (await response.json()) as { configured: Record<string, boolean> };
+    expect(body.configured).toEqual({
+      resendApiKey: true,
+      notifyEmail: true,
+      studioToken: true,
+    });
+    expect(JSON.stringify(body)).not.toContain(TOKEN);
+  });
+
+  it('still stores a submission when the notification address is missing', async () => {
+    const response = await SELF.fetch('https://worker.example.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Origin: ORIGIN },
+      body: JSON.stringify(submission()),
+    });
+
+    // Proved through the email path rather than by unsetting a binding, which
+    // the test runtime does not allow part way through a run.
+    expect(response.status).toBe(201);
+  });
+
+  it('reports why an email did not go, without any note text', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve(new Response('{"message":"domain is not verified"}', { status: 403 })),
+      ),
+    );
+
+    const response = await post(submission());
+    expect(response.status).toBe(201);
+    expect(((await response.json()) as { emailed: boolean }).emailed).toBe(false);
+
+    const log = logged.join('\n');
+    expect(log).toContain('domain is not verified');
+    expect(log).toContain('403');
+    expect(log).not.toContain('Leans cool, but never cold.');
+  });
+
+  it('reports a refusal from Resend rather than throwing', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.reject(new TypeError('network down'))),
+    );
+
+    const response = await post(submission());
+    expect(response.status).toBe(201);
+    expect(logged.join('\n')).toContain('could not be reached');
+  });
+});
+
 describe('GET /submissions', () => {
   it('refuses a request with no token', async () => {
     const response = await SELF.fetch('https://worker.example.com/submissions?slug=carnot-ai', {

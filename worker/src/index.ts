@@ -13,9 +13,14 @@ export type Env = {
   ALLOWED_ORIGINS: string;
   FROM_EMAIL: string;
   APP_URL: string;
-  RESEND_API_KEY: string;
-  STUDIO_TOKEN: string;
-  NOTIFY_EMAIL: string;
+  /**
+   * The three secrets, optional because a worker can be deployed before they are
+   * set. Saying otherwise in the types would only move the problem to runtime,
+   * where it showed up as a 500 that looked like a fault in the request.
+   */
+  RESEND_API_KEY?: string;
+  STUDIO_TOKEN?: string;
+  NOTIFY_EMAIL?: string;
 };
 
 /** Submissions one address may send in an hour before being turned away. */
@@ -89,6 +94,11 @@ async function withinRateLimit(env: Env, address: string): Promise<boolean> {
 }
 
 function hasStudioToken(request: Request, env: Env): boolean {
+  // A worker deployed without this secret has no right answer, so every token is
+  // wrong. Reading the length off nothing would throw and return a 500, which
+  // would look like a fault in the request rather than in the setup.
+  if (!env.STUDIO_TOKEN) return false;
+
   const header = request.headers.get('Authorization') ?? '';
   const supplied = header.startsWith('Bearer ') ? header.slice('Bearer '.length) : '';
   if (supplied.length === 0 || supplied.length !== env.STUDIO_TOKEN.length) return false;
@@ -166,17 +176,33 @@ async function handleSubmit(request: Request, env: Env, origin: string): Promise
   // A pointer, so one submission can be fetched by id without a scan.
   await env.SUBMISSIONS.put(`idx:${stored.id}`, key, { expirationTtl: KEEP_FOR });
 
-  const emailed = await sendNotification(stored, env);
+  const email = await sendNotification(stored, env);
 
-  // Note text is confidential client material and stays out of the logs.
+  // Note text is confidential client material and stays out of the logs. The
+  // reason an email did not go is not: without it, a half configured worker
+  // gives no way of telling what is missing.
   console.log(
-    JSON.stringify({ event: 'submission', slug, id: stored.id, emailed, result: 'stored' }),
+    JSON.stringify({
+      event: 'submission',
+      slug,
+      id: stored.id,
+      result: 'stored',
+      emailed: email.sent,
+      ...(email.sent ? {} : { emailProblem: email.reason }),
+    }),
   );
 
-  return json({ id: stored.id, receivedAt: stored.receivedAt, emailed }, 201, origin);
+  return json({ id: stored.id, receivedAt: stored.receivedAt, emailed: email.sent }, 201, origin);
 }
 
 async function handleList(request: Request, env: Env, origin: string): Promise<Response> {
+  if (!env.STUDIO_TOKEN) {
+    return json(
+      { error: 'This worker has no studio token set, so the inbox cannot be opened.' },
+      503,
+      origin,
+    );
+  }
   if (!hasStudioToken(request, env)) {
     return json({ error: 'The studio token is missing or wrong.' }, 401, origin);
   }
@@ -201,6 +227,13 @@ async function handleOne(
   env: Env,
   origin: string,
 ): Promise<Response> {
+  if (!env.STUDIO_TOKEN) {
+    return json(
+      { error: 'This worker has no studio token set, so the inbox cannot be opened.' },
+      503,
+      origin,
+    );
+  }
   if (!hasStudioToken(request, env)) {
     return json({ error: 'The studio token is missing or wrong.' }, 401, origin);
   }
@@ -252,7 +285,21 @@ export default {
     }
 
     if (pathname === '/health') {
-      return json({ ok: true, schemaVersion: SCHEMA_VERSION }, 200, origin);
+      // Whether each secret exists, never what any of them is. Setting the
+      // worker up without this means guessing at which step went wrong.
+      return json(
+        {
+          ok: true,
+          schemaVersion: SCHEMA_VERSION,
+          configured: {
+            resendApiKey: Boolean(env.RESEND_API_KEY),
+            notifyEmail: Boolean(env.NOTIFY_EMAIL),
+            studioToken: Boolean(env.STUDIO_TOKEN),
+          },
+        },
+        200,
+        origin,
+      );
     }
 
     return json({ error: 'No such endpoint.' }, 404, origin);
