@@ -1,0 +1,76 @@
+@import 'tailwindcss';
+
+/*
+ * Every brand value is a CSS custom property so a client config can override it.
+ * Tailwind v4 emits each `@theme` entry as a custom property on `:root` and builds
+ * its utilities on top of `var(--…)`, so setting one of these inline on the sheet
+ * re-skins everything inside it without a rebuild.
+ *
+ * Contrast ratios below were measured against the paper colour. The dashed track
+ * and the notes border are non-text interface parts and clear the 3:1 line in
+ * WCAG 1.4.11; every text colour clears 4.5:1 for AA.
+ */
+@theme {
+  --color-paper: #f4efe6; /* the cream sheet */
+  --color-ink: #1a1a1a; /* 15.20:1 on paper */
+  --color-muted: #5c5548; /* 6.44:1 on paper */
+  --color-rule: #d8d0c2; /* hairlines, decorative only */
+  --color-track: #7a73b0; /* 3.74:1 on paper */
+  --color-dot: #453f7a; /* 8.17:1 on paper */
+  --color-note: #f6d4c8; /* salmon sticky-note fill */
+  --color-note-border: #b35f45; /* 3.95:1 on paper, 3.27:1 on the fill */
+  --color-note-ink: #1a1a1a; /* 12.57:1 on the fill */
+  --color-note-placeholder: #6e5d57; /* 4.51:1 on the fill */
+  --color-focus: #2f2a55; /* 11.58:1 on paper, 9.58:1 on the fill */
+
+  --font-display:
+    'Helvetica Neue', Helvetica, Inter, 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+  --font-body:
+    'Helvetica Neue', Helvetica, Inter, 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* A single visible focus treatment, used by every control on the sheet. */
+:where(a, button, input, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* The small wide-spaced upper case labels that run through the original slide. */
+.label-caps {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Needed by the Pages deployment job.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Format
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Types
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: End to end tests
+        run: npm run e2e
+
+  build:
+    name: Build site
+    needs: check
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - uses: actions/configure-pages@v5
+
+      - name: Build
+        # GITHUB_REPOSITORY gives vite.config.ts the base path for the Pages URL.
+        # VITE_SUBMIT_ENDPOINT is optional: with it unset the app builds without
+        # the send button, which is a supported state.
+        env:
+          VITE_SUBMIT_ENDPOINT: ${{ vars.VITE_SUBMIT_ENDPOINT }}
+        run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy to Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  deploy-worker:
+    name: Deploy worker
+    needs: check
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Two commits are enough to diff a normal push; a force push or a first
+          # push falls back to deploying, which is the safe direction.
+          fetch-depth: 2
+
+      - name: Decide whether the worker changed
+        id: changed
+        run: |
+          if [ -z "${{ github.event.before }}" ] || [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            echo "result=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" \
+            | grep -Eq '^(worker/|shared/)'; then
+            echo "result=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.changed.outputs.result == 'true'
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+        if: steps.changed.outputs.result == 'true'
+
+      - name: Publish with Wrangler
+        if: steps.changed.outputs.result == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npx wrangler deploy --config worker/wrangler.toml
