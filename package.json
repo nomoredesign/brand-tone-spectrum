@@ -16,6 +16,7 @@
     "test:app": "vitest run --config vitest.config.ts",
     "test:worker": "vitest run --config worker/vitest.config.ts",
     "e2e": "playwright test",
+    "worker:setup": "node scripts/setup-worker.mjs",
     "worker:dev": "wrangler dev --config worker/wrangler.toml",
     "worker:deploy": "wrangler deploy --config worker/wrangler.toml",
     "new-client": "node scripts/new-client.mjs"

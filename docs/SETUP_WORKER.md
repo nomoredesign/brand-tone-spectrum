@@ -5,44 +5,46 @@ set of answers, keeps a copy, and emails the studio. The app works without it:
 with no endpoint configured, the send button and the inbox link do not appear,
 and every other way of moving the answers still works.
 
-Do these steps in order. At this volume every step is free, on both Cloudflare's
-and Resend's free tiers. The notes below say what each one costs and where the
-free allowance runs out.
+The values in `worker/wrangler.toml` are already filled in for this repository:
 
-## Before you start
+- `ALLOWED_ORIGINS` includes `https://nomoredesign.github.io`
+- `APP_URL` is `https://nomoredesign.github.io/brand-tone-spectrum/`
+- `FROM_EMAIL` is `onboarding@resend.dev`, which Resend lets you send from
+  without verifying a domain, as long as you send to your own address
 
-You need a Cloudflare account and a Resend account. Both are free to open.
+So what is left is a Cloudflare account, three secrets, and a deploy. At this
+volume every step is free on both Cloudflare's and Resend's free tiers.
 
-Log Wrangler in once:
+## 1. Log in to Cloudflare
 
 ```bash
 npx wrangler login
 ```
 
-## 1. Create the storage
+This opens a browser and asks you to authorise Wrangler. It cannot be done for
+you, which is why the rest of this document exists.
+
+## 2. Create the storage
 
 Submissions are kept in Cloudflare KV for a year.
 
 ```bash
-npx wrangler kv namespace create SUBMISSIONS
+npm run worker:setup
 ```
 
-It prints an id. Put that id in `worker/wrangler.toml`, replacing
-`replace-with-your-kv-namespace-id`:
+That creates the namespace and writes its id into `worker/wrangler.toml` for
+you. It refuses to run twice, and it never touches the secrets.
 
-```toml
-[[kv_namespaces]]
-binding = "SUBMISSIONS"
-id = "the-id-it-printed"
-```
+If you would rather do it by hand, `npx wrangler kv namespace create SUBMISSIONS`
+prints an id to paste in yourself.
 
 **Cost:** free. The free tier covers 100,000 reads and 1,000 writes a day, and
 1 GB of storage. One submission is one write.
 
-## 2. Set the three secrets
+## 3. Set the three secrets
 
-Secrets live in the worker and are never written into `wrangler.toml` and never
-reach the browser. Each command asks for the value and does not echo it.
+Run these yourself. Each asks for the value, does not echo it, and stores it in
+the worker, so nothing lands in your shell history or in this repository.
 
 ```bash
 npx wrangler secret put RESEND_API_KEY --config worker/wrangler.toml
@@ -56,69 +58,32 @@ npx wrangler secret put STUDIO_TOKEN --config worker/wrangler.toml
 npx wrangler secret put NOTIFY_EMAIL --config worker/wrangler.toml
 ```
 
-- `RESEND_API_KEY` comes from Resend, under API Keys. Sending permission is
+- **`RESEND_API_KEY`** comes from Resend, under API Keys. Sending permission is
   enough.
-- `STUDIO_TOKEN` is a password you make up. It is the only thing standing
-  between anyone and every submission, so make it long and random. This command
-  prints one you can paste in:
+- **`STUDIO_TOKEN`** is a password you invent. It is the only thing between
+  anyone and every submission, so make it long and random. This prints one:
 
   ```bash
   node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
   ```
 
-- `NOTIFY_EMAIL` is the address that should be told when a client finishes.
+- **`NOTIFY_EMAIL`** is the address to tell when a client finishes.
 
 **Cost:** free.
 
-## 3. Set the three plain settings
-
-These are not secret, so they live in `worker/wrangler.toml` under `[vars]`.
-Edit them before deploying:
-
-- `ALLOWED_ORIGINS` — a comma separated list. Only these may call the worker;
-  anything else is refused rather than echoed back. Include the GitHub Pages
-  address and `http://localhost:5173` for development, for example:
-
-  ```toml
-  ALLOWED_ORIGINS = "https://YOURNAME.github.io,http://localhost:5173,http://localhost:4319"
-  ```
-
-  Use the origin only: the scheme and the host, with no path and no trailing
-  slash. A Pages project site is served from `https://YOURNAME.github.io`, so
-  that is the origin even though the tool sits under a repository path.
-
-- `FROM_EMAIL` — the address the notification is sent from. It must be on a
-  domain you have verified in Resend, or the mail will not leave.
-
-- `APP_URL` — where the tool lives, used to build the links in the email, for
-  example `https://YOURNAME.github.io/YOUR-REPO/`.
-
-## 4. Verify your domain in Resend
-
-In Resend, add your domain and add the DNS records it gives you. Until the
-domain shows as verified, `POST /submit` still stores the submission and still
-returns success, but no email arrives. This is deliberate: an email that will
-not send is not a reason to tell a client their work was lost.
-
-Resend also allows sending to your own address from `onboarding@resend.dev`
-without a domain, which is enough to try the whole path end to end before you
-set DNS up.
-
-**Cost:** free. Resend's free tier covers 3,000 emails a month and 100 a day.
-
-## 5. Deploy
+## 4. Deploy
 
 ```bash
 npm run worker:deploy
 ```
 
 Wrangler prints the worker's URL, something like
-`https://brand-tone-submit.YOURNAME.workers.dev`.
+`https://brand-tone-submit.<your-subdomain>.workers.dev`.
 
-Check it answers:
+Check it answers, putting your own URL in:
 
 ```bash
-curl -s -H "Origin: http://localhost:5173" https://brand-tone-submit.YOURNAME.workers.dev/health
+curl -s -H "Origin: https://nomoredesign.github.io" https://brand-tone-submit.YOUR-SUBDOMAIN.workers.dev/health
 ```
 
 You should get `{"ok":true,"schemaVersion":1}`. Without the `Origin` header you
@@ -126,32 +91,66 @@ get a 403, which is the origin check doing its job.
 
 **Cost:** free. The free tier covers 100,000 requests a day.
 
-## 6. Tell the site where the worker is
+## 5. Tell the site where the worker is
 
-The app reads the endpoint from `VITE_SUBMIT_ENDPOINT` at build time.
+The app reads the endpoint at build time. Add it as a repository **variable**,
+not a secret: it ends up in the browser bundle either way, and a secret would
+only make that harder to see.
 
-For GitHub Pages, add it as a repository **variable**, not a secret, because it
-ends up in the browser bundle either way and a secret would only make that
-harder to see:
-
-1. Repository settings, then Secrets and variables, then Actions.
-2. The Variables tab, then New repository variable.
-3. Name `VITE_SUBMIT_ENDPOINT`, value the worker URL with no trailing slash.
-
-Push to `main`, and the workflow builds with it. The send button and the inbox
-link appear on the next deployment.
-
-For local development, put it in a `.env.local` file, which git ignores:
-
-```
-VITE_SUBMIT_ENDPOINT=https://brand-tone-submit.YOURNAME.workers.dev
+```bash
+gh variable set VITE_SUBMIT_ENDPOINT --body "https://brand-tone-submit.YOUR-SUBDOMAIN.workers.dev"
 ```
 
-## 7. Try it
+Or through the web: repository settings, Secrets and variables, Actions, the
+Variables tab, New repository variable.
+
+No trailing slash. Push anything to `main` after that and the send button and
+the inbox link appear on the next deployment.
+
+For local development, put the same line in `.env.local`, which git ignores:
+
+```
+VITE_SUBMIT_ENDPOINT=https://brand-tone-submit.YOUR-SUBDOMAIN.workers.dev
+```
+
+Note that `.env.local` also affects `npm run e2e`, which builds the site before
+running. One test checks that no send button appears without an endpoint, and it
+will fail while that file exists.
+
+## 6. Let continuous integration deploy the worker
+
+The workflow has a job that deploys the worker whenever something under
+`worker/` or `shared/` changes. It skips quietly until a token exists.
+
+Make a token at **dash.cloudflare.com → My Profile → API Tokens**, using the
+_Edit Cloudflare Workers_ template, then add it as a repository secret:
+
+```bash
+gh secret set CLOUDFLARE_API_TOKEN
+```
+
+That command asks for the value rather than taking it on the command line.
+
+## 7. Verify the domain in Resend, when you want your own address
+
+Until then, `onboarding@resend.dev` will only deliver to the address on your
+Resend account. To send from `nomoredesign.co.uk`, add the domain in Resend, add
+the DNS records it gives you, and change `FROM_EMAIL` in `worker/wrangler.toml`.
+
+Until a domain is verified, `POST /submit` still stores the submission and still
+returns success, but no email arrives. This is deliberate: an email that will not
+send is not a reason to tell a client their work was lost. The response body says
+`"emailed": false` when that happens.
+
+**Cost:** free. Resend's free tier covers 3,000 emails a month and 100 a day.
+
+## 8. Try it
 
 Open a client page, fill something in, and press send. You should get an email,
-and the submission should appear at `#/inbox` once you paste the studio token
-in. The link at the bottom of the email opens the same answers in the tool.
+and the submission should appear at
+`https://nomoredesign.github.io/brand-tone-spectrum/#/inbox` once you paste the
+studio token in. The link at the bottom of the email opens the same answers in
+the tool.
 
 ## Running the worker locally
 
@@ -190,6 +189,6 @@ NOTIFY_EMAIL=you@example.com
   Resend, or `FROM_EMAIL` is on a domain you do not own. The response body has
   `"emailed": false` when this happens.
 - **401 on the inbox.** The studio token in the browser does not match
-  `STUDIO_TOKEN`. Clear it on the inbox page and paste it again.
+  `STUDIO_TOKEN`. Press Forget token on the inbox page and paste it again.
 - **429 while testing.** You have sent ten in an hour from one address. Wait, or
   raise `PER_HOUR` in `worker/src/index.ts`.

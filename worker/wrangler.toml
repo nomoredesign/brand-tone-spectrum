@@ -8,20 +8,25 @@ compatibility_date = "2025-01-01"
 
 [vars]
 # Comma separated. Only these origins may call the worker; anything else is
-# refused rather than echoed back. Add the GitHub Pages address here once the
-# site is live.
-ALLOWED_ORIGINS = "http://localhost:5173,http://localhost:4319"
+# refused rather than echoed back. The first is the live site, and the two after
+# it are the development server and the end to end test server.
+#
+# Origins only: the scheme and the host, with no path. A GitHub Pages project
+# site is served from the account host, so the repository path is not part of it.
+ALLOWED_ORIGINS = "https://nomoredesign.github.io,http://localhost:5173,http://localhost:4319"
 
 # The address the notification is sent from. It must be on a domain verified in
-# Resend, or the mail will not leave.
-FROM_EMAIL = "brand-tone@example.com"
+# Resend, or the mail will not leave. Resend also allows onboarding@resend.dev
+# to your own address without a domain, which is enough to try the path first.
+FROM_EMAIL = "onboarding@resend.dev"
 
 # Where the tool lives, used to build the links in the email.
-APP_URL = "http://localhost:5173/"
+APP_URL = "https://nomoredesign.github.io/brand-tone-spectrum/"
 
 [[kv_namespaces]]
 binding = "SUBMISSIONS"
-# Replace with the id printed by `wrangler kv namespace create SUBMISSIONS`.
+# Filled in by `npm run worker:setup`, or by hand from the id that
+# `wrangler kv namespace create SUBMISSIONS` prints.
 id = "replace-with-your-kv-namespace-id"
 
 [observability]
