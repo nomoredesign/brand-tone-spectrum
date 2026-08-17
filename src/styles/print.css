@@ -1,0 +1,115 @@
+/*
+ * Printing is how a finished chart becomes a PDF: the browser's own print
+ * dialog does the export, so there is no PDF library here to keep working.
+ *
+ * The page is landscape at slide proportions, the toolbar is gone, and each
+ * note prints as words rather than as an empty form control.
+ */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 8mm;
+  }
+
+  html,
+  body,
+  #root {
+    height: auto;
+    background: #fff;
+  }
+
+  body {
+    /* Keep the cream sheet and the salmon notes: this is a design document. */
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Nothing to press on paper. */
+  .toolbar,
+  .notice-region {
+    display: none !important;
+  }
+
+  .sheet {
+    max-width: none;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    gap: 6mm;
+  }
+
+  .sheet-title-display {
+    font-size: 20pt;
+  }
+
+  .sheet-centre-mark {
+    font-size: 13pt;
+  }
+
+  .label-caps {
+    font-size: 6pt;
+  }
+
+  /*
+   * On screen every row shares the tallest row's height, which keeps the grid
+   * even. On paper that would waste most of the page, so rows take the height
+   * they need and are kept whole across a break.
+   */
+  .chart {
+    grid-auto-rows: minmax(9mm, auto);
+    row-gap: 1.5mm;
+    column-gap: 4mm;
+  }
+
+  .axis-row > * {
+    break-inside: avoid;
+  }
+
+  .axis-label {
+    font-size: 8pt;
+  }
+
+  .scale-marker {
+    font-size: 7pt;
+  }
+
+  .scale-markers {
+    height: 4mm;
+  }
+
+  .track {
+    height: 6mm;
+  }
+
+  /* The dot's position against the numbers carries the value, as on the slide. */
+  .track-value {
+    display: none;
+  }
+
+  .notes-input {
+    display: none;
+  }
+
+  .print-only {
+    display: block;
+  }
+
+  .notes-cell::after,
+  .notes-static {
+    font-size: 7pt;
+    line-height: 1.35;
+    padding: 1.5mm 2mm;
+  }
+
+  .sheet-footer {
+    margin-top: 0;
+    padding-top: 3mm;
+    break-inside: avoid;
+  }
+
+  /* Links print as themselves, without the browser adding the URL after them. */
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+}

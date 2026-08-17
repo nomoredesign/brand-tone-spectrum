@@ -118,6 +118,20 @@ test('no send button appears when no endpoint is configured', async ({ page }) =
   await expect(page.getByRole('button', { name: /send/i })).toHaveCount(0);
 });
 
+test('printing shows the notes as words and drops the toolbar', async ({ page }) => {
+  await page.goto(CLIENT);
+  await note(page).fill('This should appear on paper.');
+
+  await page.emulateMedia({ media: 'print' });
+
+  await expect(page.getByRole('group', { name: 'Actions' })).toBeHidden();
+  await expect(note(page)).toBeHidden();
+  // The printed twin of the note, which only the print stylesheet reveals.
+  const printed = page.locator('.notes-static').first();
+  await expect(printed).toBeVisible();
+  await expect(printed).toHaveText('This should appear on paper.');
+});
+
 test('an unknown client says so', async ({ page }) => {
   await page.goto('/#/c/nobody-here');
   await expect(page.getByRole('heading', { name: 'No such client' })).toBeVisible();

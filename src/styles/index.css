@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import './sheet.css';
+@import './print.css';
 
 /*
  * Every brand value is a CSS custom property so a client config can override it.
