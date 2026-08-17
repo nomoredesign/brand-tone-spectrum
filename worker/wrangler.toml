@@ -1,0 +1,28 @@
+name = "brand-tone-submit"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+
+# Nothing secret belongs in this file. The Resend API key, the studio token and
+# the notification address are set with `wrangler secret put`. See
+# docs/SETUP_WORKER.md.
+
+[vars]
+# Comma separated. Only these origins may call the worker; anything else is
+# refused rather than echoed back. Add the GitHub Pages address here once the
+# site is live.
+ALLOWED_ORIGINS = "http://localhost:5173,http://localhost:4319"
+
+# The address the notification is sent from. It must be on a domain verified in
+# Resend, or the mail will not leave.
+FROM_EMAIL = "brand-tone@example.com"
+
+# Where the tool lives, used to build the links in the email.
+APP_URL = "http://localhost:5173/"
+
+[[kv_namespaces]]
+binding = "SUBMISSIONS"
+# Replace with the id printed by `wrangler kv namespace create SUBMISSIONS`.
+id = "replace-with-your-kv-namespace-id"
+
+[observability]
+enabled = true

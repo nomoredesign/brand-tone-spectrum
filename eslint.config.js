@@ -48,6 +48,11 @@ export default tseslint.config(
     languageOptions: {
       globals: { ...globals.worker },
     },
+    rules: {
+      // The worker's structured log line is how a submission is traced after
+      // the fact. It carries the slug, the id and the result, never note text.
+      'no-console': 'off',
+    },
   },
   prettier,
 );
