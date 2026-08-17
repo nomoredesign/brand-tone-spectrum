@@ -5,15 +5,47 @@ screen: you add a file, push it, and the client has their own URL.
 
 ## The short version
 
+Open the dashboard at `#/`, press **New client**, fill the form in, and download
+the file it makes. Put that file in `clients/` and push.
+
+Or, from a terminal:
+
 ```bash
 npm run new-client acme-corp
 ```
 
-Edit `clients/acme-corp.json`, commit, push, and send the client:
+Either way, edit until it reads right, commit, push, and send the client:
 
 ```
 https://YOURNAME.github.io/YOUR-REPO/#/c/acme-corp
 ```
+
+## Using the dashboard
+
+The dashboard is the index page at `#/`. It lists every client, and each one has
+**Edit**, **Present** and **Remove** beside it.
+
+**New client** opens a form with a live preview of the real sheet beside it, so
+you can see the chart as you build it. It fills the slug in from the name, warns
+if another client already has that slug, and checks the contrast of any colours
+you set. It will not offer the file until what it holds is valid, so a file from
+here is always one the tool can load.
+
+It cannot write to the repository, because the site is a static page with no
+server and no login. So it gives you the finished file to **download** or
+**copy**, and tells you where to put it. That is one `git push`, which you are
+doing anyway to deploy.
+
+**Edit** opens an existing client with everything already filled in. Download the
+result and replace the file. References attached to a pair are carried through
+untouched, since the form has no way to edit them yet.
+
+**Remove** names the exact files to delete, gives you the commands, and offers to
+forget any answers this browser has saved for that client. Deleting the files and
+pushing is the actual removal.
+
+The rest of this document covers the same ground for people who would rather edit
+the JSON directly, and explains what each field does.
 
 ## The whole thing
 

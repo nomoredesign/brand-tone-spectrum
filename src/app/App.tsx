@@ -2,6 +2,7 @@ import { HashRouter, Route, Routes } from 'react-router-dom';
 import { IndexPage } from './routes/IndexPage';
 import { ClientPage } from './routes/ClientPage';
 import { InboxPage } from './routes/InboxPage';
+import { ClientBuilderPage } from '@/features/clients/ClientBuilderPage';
 import { NotFoundPage } from './routes/NotFoundPage';
 
 /**
@@ -15,6 +16,8 @@ export function App() {
         <Route path="/" element={<IndexPage />} />
         <Route path="/c/:slug" element={<ClientPage />} />
         <Route path="/inbox" element={<InboxPage />} />
+        <Route path="/new" element={<ClientBuilderPage mode="new" />} />
+        <Route path="/edit/:slug" element={<ClientBuilderPage mode="edit" />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </HashRouter>

@@ -141,6 +141,9 @@ test.describe('accessibility', () => {
   for (const [name, path] of [
     ['the index', '/'],
     ['a client sheet', CLIENT],
+    // The presentation view swaps every notes box for read only text, so it is
+    // a different tree from the editable sheet and needs checking on its own.
+    ['the presentation view', `${CLIENT}?present=1`],
   ] as const) {
     test(`${name} has no axe violations`, async ({ page }) => {
       await page.goto(path);

@@ -28,7 +28,12 @@ export function NotesCell({
   if (readOnly) {
     return (
       <div className="notes-cell" data-value={value}>
-        <p className="notes-static" aria-label={label}>
+        {/*
+          A paragraph may not carry an accessible name on its own, so the read
+          only note is given the role that does. Without this the presentation
+          view has an ARIA fault the editable view does not.
+        */}
+        <p className="notes-static" role="note" aria-label={label}>
           {value}
         </p>
       </div>

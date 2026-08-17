@@ -81,6 +81,19 @@ The first three work with no server at all. If `VITE_SUBMIT_ENDPOINT` is not
 set, the send button and the inbox do not appear and everything else is
 unchanged.
 
+## Adding and removing clients
+
+The dashboard at `#/` lists every client, with **Edit**, **Present** and
+**Remove** beside each one, and a **New client** button.
+
+The builder is a form with a live preview of the real sheet, validated against
+the same schema the app loads files with. It cannot write to the repository from
+a static page, so it produces the finished file to download or copy and tells you
+where to put it. Removing a client names the files to delete and gives you the
+commands.
+
+`npm run new-client <slug>` does the same job from a terminal.
+
 ## Other things it does
 
 - **Printing** puts the chart on one landscape page at slide proportions, with
