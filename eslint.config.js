@@ -44,6 +44,16 @@ export default tseslint.config(
     },
   },
   {
+    // Command line helpers, which run in Node and talk to the person running them.
+    files: ['scripts/**/*.{js,mjs}'],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+    rules: {
+      'no-console': 'off',
+    },
+  },
+  {
     files: ['worker/**/*.ts'],
     languageOptions: {
       globals: { ...globals.worker },
