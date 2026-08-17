@@ -1,6 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 4173;
+/*
+ * Deliberately not Vite's default preview port. Reusing whatever already
+ * answers on a well known port silently runs the whole suite against someone
+ * else's server, which is a confusing way to fail.
+ */
+const PORT = 4319;
 
 export default defineConfig({
   testDir: './e2e',
@@ -19,7 +24,8 @@ export default defineConfig({
     // bundle and the same base path that GitHub Pages will serve.
     command: `npm run build && npm run preview -- --port ${PORT} --strictPort`,
     port: PORT,
-    reuseExistingServer: !process.env.CI,
+    // Always build and serve fresh, so a run can never test a stale bundle.
+    reuseExistingServer: false,
     timeout: 180_000,
   },
 });
