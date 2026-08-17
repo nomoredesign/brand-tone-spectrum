@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "slug": "your-client-slug",
+  "clientName": "YOUR CLIENT",
+  "projectLine": "STRATEGY & DESIGN DIRECTION",
+  "dateLine": "MONTH 2026",
+  "studio": {
+    "name": "NOMOREDESIGN",
+    "website": "nomoredesign.co.uk",
+    "social": "@nomoredesign",
+    "strapline": "Great design, made simple."
+  },
+  "scale": {
+    "min": 1,
+    "max": 5,
+    "step": 0.5,
+    "snap": false
+  },
+  "axes": [
+    {
+      "id": "feminine-masculine",
+      "leftLabel": "Feminine",
+      "rightLabel": "Masculine",
+      "defaultValue": 3,
+      "refs": { "left": [], "right": [] }
+    },
+    {
+      "id": "playful-serious",
+      "leftLabel": "Playful",
+      "rightLabel": "Serious",
+      "defaultValue": 3,
+      "refs": { "left": [], "right": [] }
+    },
+    {
+      "id": "approachable-authoritative",
+      "leftLabel": "Approachable",
+      "rightLabel": "Authoritative",
+      "defaultValue": 3,
+      "refs": { "left": [], "right": [] }
+    },
+    {
+      "id": "classic-modern",
+      "leftLabel": "Classic",
+      "rightLabel": "Modern",
+      "defaultValue": 3,
+      "refs": { "left": [], "right": [] }
+    },
+    {
+      "id": "understated-expressive",
+      "leftLabel": "Understated",
+      "rightLabel": "Expressive",
+      "defaultValue": 3,
+      "refs": { "left": [], "right": [] }
+    },
+    {
+      "id": "economical-luxurious",
+      "leftLabel": "Economical",
+      "rightLabel": "Luxurious",
+      "defaultValue": 3,
+      "refs": { "left": [], "right": [] }
+    },
+    {
+      "id": "simple-detailed",
+      "leftLabel": "Simple",
+      "rightLabel": "Detailed",
+      "defaultValue": 3,
+      "refs": { "left": [], "right": [] }
+    },
+    {
+      "id": "warm-cool",
+      "leftLabel": "Warm",
+      "rightLabel": "Cool",
+      "defaultValue": 3,
+      "refs": { "left": [], "right": [] }
+    }
+  ]
+}
