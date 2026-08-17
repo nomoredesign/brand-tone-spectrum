@@ -406,6 +406,76 @@
   margin-top: 0.5rem;
 }
 
+/* The one action a client takes at the end, so it reads as the main one. */
+.toolbar-button-strong {
+  background-color: var(--color-note);
+  font-weight: 600;
+}
+
+.send-dialog {
+  margin: auto;
+  width: min(30rem, calc(100vw - 2rem));
+  padding: 1.25rem;
+  border: 1px solid var(--color-note-border);
+  border-radius: 0.5rem;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.send-dialog::backdrop {
+  background-color: rgb(26 26 26 / 45%);
+}
+
+.send-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  margin: 0 0 0.5rem;
+}
+
+.send-intro {
+  color: var(--color-muted);
+  margin: 0 0 1rem;
+}
+
+.send-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.875rem;
+}
+
+.send-field > span {
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.send-field input,
+.send-field textarea {
+  font: inherit;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--color-note-border);
+  border-radius: 0.25rem;
+  background-color: transparent;
+  color: inherit;
+}
+
+.send-failure {
+  border: 1px solid var(--color-note-border);
+  background-color: var(--color-note);
+  border-radius: 0.25rem;
+  padding: 0.75rem;
+  margin-bottom: 0.875rem;
+}
+
+.send-failure p {
+  margin: 0;
+}
+
 /* A file is being dragged over the page. */
 .drop-target {
   outline: 2px dashed var(--color-dot);

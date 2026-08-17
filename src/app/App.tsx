@@ -1,6 +1,7 @@
 import { HashRouter, Route, Routes } from 'react-router-dom';
 import { IndexPage } from './routes/IndexPage';
 import { ClientPage } from './routes/ClientPage';
+import { InboxPage } from './routes/InboxPage';
 import { NotFoundPage } from './routes/NotFoundPage';
 
 /**
@@ -13,6 +14,7 @@ export function App() {
       <Routes>
         <Route path="/" element={<IndexPage />} />
         <Route path="/c/:slug" element={<ClientPage />} />
+        <Route path="/inbox" element={<InboxPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </HashRouter>

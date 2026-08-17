@@ -3,6 +3,8 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import type { Answers, ClientConfig } from '@shared/schema';
 import { getClientConfig, getCommittedAnswers } from '@/lib/clients';
 import { decodeAnswers } from '@/lib/encoding';
+import { isSubmitConfigured } from '@/lib/env';
+import { SendButton } from '@/features/submit/SendButton';
 import { Notice } from '@/components/Notice';
 import { defaultAnswers } from '@/features/session/answers';
 import { describeMergeReport, importAnswers, mergeAnswers } from '@/features/session/merge';
@@ -155,7 +157,16 @@ function ClientSheet({ config, token }: { config: ClientConfig; token: string })
             <Notice message={notice} onDismiss={() => setNotice(null)} />
           </div>
 
-          <Toolbar config={config} onMessage={setNotice} onFileChosen={handleFile} />
+          <Toolbar
+            config={config}
+            onMessage={setNotice}
+            onFileChosen={handleFile}
+            // With no endpoint configured there is no send button at all, and
+            // every other way of moving the answers still works.
+            sendButton={
+              isSubmitConfigured ? <SendButton config={config} onMessage={setNotice} /> : undefined
+            }
+          />
         </>
       )}
     </div>
